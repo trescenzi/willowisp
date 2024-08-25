@@ -1,16 +1,17 @@
 import app/middleware.{type Context}
 import gleam/dynamic
 import gleam/result
+import gleam/io
 import gleam/list
 import sqlight
+import birl
 import gleam/string_builder
 import wisp.{type Request, type Response}
-//import birl
+import lustre/element.{to_document_string_builder}
+import app/views/status.{statuses_display, Status}
+import app/views/layout.{layout}
 
 pub fn home(_req: Request, ctx: Context) -> Response {
-  // Apply the middleware stack for this request/response.
-  //use _req <- web.middleware(req)
-
   let sql = "
         WITH statuses AS (
         SELECT
@@ -38,27 +39,20 @@ pub fn home(_req: Request, ctx: Context) -> Response {
    |> result.map(fn(status) {
       list.map(status, fn(status) {
         let #(url, status, time) = status
-        // birl.parse(time)
-        #(url, case status { 1 -> True 0 -> False _ -> False }, time)
+        io.debug(time)
+        Status(
+          url, 
+          case status { 1 -> True 0 -> False _ -> False },
+          case birl.from_naive(time) { Ok(t) -> t Error(Nil) -> birl.now() }
+        )
       })
    })
-  let body = case statuses_result {
-    Ok(statuses) -> list.fold(over: statuses, from: "", with: fn(acc, status) {
-      let #(url, status, time) = status
-      acc <>
-      "<br/>" <> 
-      url <> " " <>
-      case status {
-        True -> "Alive"
-        False -> "Dead"
-      } <> " " <>
-      time
-    })
-    Error(_) -> ""
+  case statuses_result {
+    Ok(statuses) -> [statuses_display(statuses)]
+                    |> layout
+                    |> to_document_string_builder
+                    |> wisp.html_response(200) 
+    Error(_) -> string_builder.from_string("")
+                |> wisp.html_response(500)
   }
-  // Later we'll use templates, but for now a string will do.
-  let body = string_builder.from_string(body)
-
-  // Return a 200 OK response with the body and a HTML content type.
-  wisp.html_response(body, 200)
 }

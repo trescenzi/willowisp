@@ -16,6 +16,7 @@ pub type Error {
 }
 pub type CheckerMessage {
   CheckAll
+  CheckSite(url: String)
   CheckForever
 }
 
@@ -50,40 +51,38 @@ fn check_site(url: String) {
   }
 }
 
-fn save_status(db db: sqlight.Connection, id siteid: Int, status status: Result(Bool, Error)) {
-  let id = sqlight.int(siteid)
-  let input = case status {
+fn compute_status_for_insert(status: Result(Bool, Error)) {
+  case status {
     Ok(True) -> [
       sqlight.bool(True),
       sqlight.bool(False),
       sqlight.bool(False),
-      id,
     ]
     Ok(False) -> [
       sqlight.bool(False),
       sqlight.bool(False),
       sqlight.bool(False),
-      id,
     ]
     Error(BadUrl) -> [
       sqlight.bool(False),
       sqlight.bool(False),
       sqlight.bool(True),
-      id,
     ]
     Error(FailedRequest) -> [
       sqlight.bool(False),
       sqlight.bool(True),
       sqlight.bool(False),
-      id,
     ]
     _ -> []
   }
+}
 
-  let sql =
-    "
+fn save_status(db db: sqlight.Connection, id siteid: Int, status status: Result(Bool, Error)) {
+  let id = sqlight.int(siteid)
+  let input = [id, ..compute_status_for_insert(status)]
+  let sql = "
     insert into status_checks 
-           (status, request_error, url_error, siteid)
+           (siteid, status, request_error, url_error)
     values (?, ?, ?, ?)
   "
   sqlight.query(sql, on: db, with: input, expecting: dynamic.dynamic)
@@ -110,7 +109,7 @@ fn check_all(db: sqlight.Connection) {
   each(sites, fn(site) {
     let #(url, id) = site
     let status = check_site(url)
-    save_status(db: db, id:, status:)
+    save_status(db:, id:, status:)
   })
   Ok(sites)
 }
@@ -137,6 +136,23 @@ fn handle_message(
         Ok(sites) -> each(sites, io.debug)
         Error(_) -> Nil
       }
+      actor.continue(db)
+    }
+    CheckSite(url) -> {
+      let status = check_site(url)
+      let input = compute_status_for_insert(status)
+      let sql = "
+        insert into status_checks 
+               (siteid, status, request_error, url_error)
+        select id, ?, ?, ?
+        from sites
+        where url = ?
+      "
+      let _ = sqlight.query(sql, on: db, with: list.append(input, [sqlight.text(url)]), expecting: dynamic.dynamic)
+      |> map_error(with: fn(e) {
+        io.debug(e)
+        SqlError
+      })
       actor.continue(db)
     }
     CheckForever -> {

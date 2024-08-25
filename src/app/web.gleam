@@ -7,30 +7,31 @@ import mist
 import sqlight
 import wisp.{type Request, type Response}
 import app/routes/home.{home}
+import app/routes/add.{add}
 
-pub fn handle_request(req: Request, ctx: middleware.Context) -> Response {
-  //use req, ctx <- middleware.wrap_base(req, ctx)
-
+pub fn router(req: Request, ctx: middleware.Context) -> Response {
   case wisp.path_segments(req) {
     [] -> home(req, ctx)
 
-    ["art", ..] -> wisp.not_found()
-    ["blog", ..] -> wisp.not_found()
-    ["comics", ..] -> wisp.not_found()
-    ["links", ..] -> wisp.not_found()
+    ["add", ..] -> add(req, ctx)
 
     _ -> wisp.not_found()
   }
 }
 
+pub fn handle_request(req: Request, ctx: middleware.Context) -> Response {
+  middleware.middleware(req, ctx, router)
+}
+
 pub fn init(
   checker: CheckerActor,
+  password: String
 ) {
   let assert Ok(db) = sqlight.open("./willowisp.sqlite")
-  let ctx = middleware.Context(db, checker)
+  let ctx = middleware.Context(db, checker, password)
   let handler = handle_request(_, ctx)
 
-  wisp.mist_handler(handler, "kjdfnakjdnfakjsdnf1")
+  wisp.mist_handler(handler, password)
     |> mist.new()
     |> mist.port(8080)
     |> mist.start_http()
