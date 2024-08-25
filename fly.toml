@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for willowisp on 2024-08-24T22:06:50-04:00
+# fly.toml app configuration file generated for willowisp on 2024-08-25T16:55:42-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -6,8 +6,17 @@
 app = 'willowisp'
 primary_region = 'ewr'
 
+[build]
+
+[[mounts]]
+  source = 'litefs'
+  destination = '/var/lib/litefs'
+
+[env]
+  DB_PREFIX = "/litefs"
+
 [http_service]
-  internal_port = 8080
+  internal_port = 8081
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
@@ -15,6 +24,6 @@ primary_region = 'ewr'
   processes = ['app']
 
 [[vm]]
-  memory = '1gb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1

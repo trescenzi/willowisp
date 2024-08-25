@@ -4,7 +4,7 @@ import gleam/otp/actor.{type StartError}
 import gleam/dynamic
 import gleam/result.{map_error}
 import mist
-import sqlight
+import app/db.{get_connection}
 import wisp.{type Request, type Response}
 import app/routes/home.{home}
 import app/routes/add.{add}
@@ -27,13 +27,13 @@ pub fn init(
   checker: CheckerActor,
   password: String
 ) {
-  let assert Ok(db) = sqlight.open("./willowisp.sqlite")
+  let assert Ok(db) = get_connection()
   let ctx = middleware.Context(db, checker, password)
   let handler = handle_request(_, ctx)
 
   wisp.mist_handler(handler, password)
     |> mist.new()
-    |> mist.port(8080)
+    |> mist.port(8081)
     |> mist.start_http()
     |> map_error(to_starterror)
 }

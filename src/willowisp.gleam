@@ -1,29 +1,14 @@
-import sqlight
 import app/checker
 import app/web
+import app/db.{init_db}
+import gleam/io
 import gleam/otp/supervisor
 import gleam/erlang/process
 import gleam/erlang/os.{get_env}
 
-fn init_db() {
-  use conn <- sqlight.with_connection("./willowisp.sqlite")
-  let sql =
-    "
-    create table if not exists sites (url text, id integer primary key);
-    create table if not exists status_checks (
-      status int2,
-      request_error int2,
-      url_error int2,
-      siteid integer,
-      time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      foreign key(siteid) references sites(id)
-    );
-  "
-  let assert Ok(Nil) = sqlight.exec(sql, conn)
-}
-
 pub fn main() {
   let _db = init_db()
+  io.debug("-----HELLO------")
 
   let assert Ok(password) = get_env("WILLOWISP_PASSWORD")
 
