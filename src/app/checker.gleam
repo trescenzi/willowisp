@@ -8,7 +8,7 @@ import gleam/dynamic
 import gleam/http/request
 import gleam/otp/actor
 import gleam/otp/task
-import gleam/erlang/process
+import gleam/erlang/process.{type Subject}
 
 pub type Error {
   BadUrl
@@ -18,6 +18,7 @@ pub type Error {
 pub type CheckerMessage {
   CheckAll
   CheckSite(url: String)
+  CheckSiteSync(reply_with: Subject(Result(Nil, Nil)), url: String)
   CheckForever
 }
 
@@ -137,6 +138,24 @@ fn handle_message(
         Ok(sites) -> each(sites, io.debug)
         Error(_) -> Nil
       }
+      actor.continue(db)
+    }
+    CheckSiteSync(client, url) -> {
+      let status = check_site(url)
+      let input = compute_status_for_insert(status)
+      let sql = "
+        insert into status_checks 
+               (siteid, status, request_error, url_error)
+        select id, ?, ?, ?
+        from sites
+        where url = ?
+      "
+      let _ = sqlight.query(sql, on: db, with: list.append(input, [sqlight.text(url)]), expecting: dynamic.dynamic)
+      |> map_error(with: fn(e) {
+        io.debug(e)
+        SqlError
+      })
+      process.send(client, Ok(Nil))
       actor.continue(db)
     }
     CheckSite(url) -> {

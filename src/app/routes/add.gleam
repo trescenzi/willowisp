@@ -1,4 +1,5 @@
 import app/views/layout.{layout}
+import app/checker
 import app/middleware
 import gleam/io
 import gleam/http.{Get, Post}
@@ -9,6 +10,7 @@ import sqlight
 import wisp.{type Request, type Response}
 import app/views/add_form.{add_form}
 import lustre/element.{to_document_string_builder}
+import gleam/otp/actor.{call}
 
 pub fn add(req: Request, ctx: middleware.Context) -> Response {
 
@@ -54,7 +56,11 @@ fn handle_submission(req, ctx: middleware.Context) {
   }
 
   case insert {
-    Ok(_) -> wisp.redirect(to: "/")
+    Ok(_) -> {
+      let assert Ok(url) = list.key_find(formdata.values, "url")
+      let _ = call(ctx.checker, checker.CheckSiteSync(_, url), 10000)
+      wisp.redirect(to: "/")
+    }
     Error(Password) -> wisp.response(403)
     Error(Form) -> wisp.unprocessable_entity()
     Error(Insert) -> wisp.internal_server_error()
