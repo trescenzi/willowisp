@@ -34,7 +34,7 @@ exec:
   - cmd: "/app/entrypoint.sh run"
 
 proxy:
-  addr: ":3001"
+  addr: ":8080"
   target: "localhost:8081"
   passthrough: 
     - "*.css"

@@ -1,4 +1,5 @@
 import sqlight
+import gleam/io.{debug}
 import gleam/erlang/os.{get_env}
 
 pub fn get_connection() {
@@ -6,8 +7,9 @@ pub fn get_connection() {
   let base = "willowisp.sqlite"
   let path = case db_prefix {
     Ok(db_prefix) -> db_prefix <> base
-    _ -> base
+    _ -> "./" <> base
   }
+  debug("DB PATH " <> path)
   sqlight.open(path)
 }
 pub fn init_db() {
@@ -25,4 +27,5 @@ pub fn init_db() {
     );
   "
   let assert Ok(Nil) = sqlight.exec(sql, conn)
+  debug("DB crerated")
 }

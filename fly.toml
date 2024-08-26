@@ -13,7 +13,7 @@ primary_region = 'ewr'
   destination = '/var/lib/litefs'
 
 [env]
-  DB_PREFIX = "/litefs"
+  DB_PREFIX = "/litefs/"
 
 [http_service]
   internal_port = 8081

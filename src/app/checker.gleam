@@ -1,3 +1,4 @@
+import app/db.{get_connection}
 import sqlight
 import gleam/result.{try, map_error}
 import gleam/io
@@ -94,7 +95,7 @@ fn save_status(db db: sqlight.Connection, id siteid: Int, status status: Result(
 
 
 pub fn start_forever(_) {
-  let assert Ok(db) = sqlight.open("./willowisp.sqlite")
+  let assert Ok(db) = get_connection()
   let checker = actor.start(db, handle_message)
   case checker {
     Ok(checker) -> actor.send(checker, CheckForever)

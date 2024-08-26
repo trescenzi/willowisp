@@ -39,26 +39,25 @@ fn handle_submission(req, ctx: middleware.Context) {
   let insert = {
     use url <- result.try(
       list.key_find(formdata.values, "url")
-      |> result.map_error(fn(_) { Error(Form) })
+      |> result.replace_error(Form)
     )
     use password <- result.try(
       list.key_find(formdata.values, "password")
-      |> result.map_error(fn(_) { Error(Form) })
+      |> result.replace_error(Password)
     )
     io.debug(url)
     io.debug(password)
     case password == app_password {
       True -> Ok(insert(url, ctx.db))
-      False -> Error(Error(Password))
+      False -> Error(Password)
     }
   }
 
   case insert {
     Ok(_) -> wisp.redirect(to: "/")
-    Error(Error(Password)) -> wisp.response(403)
-    Error(Error(Form)) -> wisp.unprocessable_entity()
-    Error(Error(Insert)) -> wisp.internal_server_error()
-    _ -> wisp.internal_server_error()
+    Error(Password) -> wisp.response(403)
+    Error(Form) -> wisp.unprocessable_entity()
+    Error(Insert) -> wisp.internal_server_error()
   }
 }
 
