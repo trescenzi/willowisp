@@ -1,4 +1,4 @@
-import app/checker
+import actors/checker
 import app/db.{init_db}
 import app/web
 import gleam/erlang/os.{get_env}

@@ -1,4 +1,3 @@
-import app/checker
 import app/middleware
 import app/views/layout.{layout}
 import app/views/save_notice.{notice}

@@ -1,4 +1,4 @@
-import app/checker.{type CheckerActor}
+import actors/checker.{type CheckerActor}
 import app/db.{get_connection}
 import app/middleware
 import app/routes/add.{add}

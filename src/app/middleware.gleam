@@ -1,4 +1,4 @@
-import app/checker.{type CheckerActor}
+import actors/checker.{type CheckerActor}
 import sqlight.{type Connection}
 import wisp
 

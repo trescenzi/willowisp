@@ -1,4 +1,4 @@
-import app/checker
+import actors/checker
 import app/middleware
 import app/views/add_form.{add_form}
 import app/views/layout.{layout}
