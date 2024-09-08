@@ -3,4 +3,3 @@ pub type Error {
   FailedRequest
   SqlError
 }
-

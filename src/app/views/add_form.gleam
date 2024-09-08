@@ -1,33 +1,13 @@
-import lustre/attribute.{class}
+import lustre/attribute.{action, class, for, id, method, name, required}
 import lustre/element.{type Element}
-import lustre/element/html.{form, label, input, text, button}
+import lustre/element/html.{button, form, input, label, text}
 
 pub fn add_form() -> Element(t) {
-  form([
-    class("add_form"),
-    attribute.form_action("/add"),
-    attribute.method("POST"),
-  ],[
-    label([
-      attribute.for("url")
-    ], [
-      text("URl to monitor:"),
-    ]),
-    input([
-      attribute.id("url"),
-      attribute.name("url"),
-      attribute.required(True),
-    ]),
-    label([
-      attribute.for("password")
-    ], [
-      text("Password:"),
-    ]),
-    input([
-      attribute.id("password"),
-      attribute.name("password"),
-      attribute.required(True),
-    ]),
+  form([class("add_form"), action("/add"), method("POST")], [
+    label([for("url")], [text("URl to monitor:")]),
+    input([id("url"), name("url"), required(True)]),
+    label([for("password")], [text("Password:")]),
+    input([id("password"), name("password"), required(True)]),
     button([], [text("Monitor")]),
   ])
 }

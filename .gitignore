@@ -3,3 +3,5 @@
 /build
 erl_crash.dump
 *.sqlite
+.env
+.env.local

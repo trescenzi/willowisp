@@ -1,5 +1,5 @@
-import sqlight.{type Connection}
 import app/checker.{type CheckerActor}
+import sqlight.{type Connection}
 import wisp
 
 pub type Context {
