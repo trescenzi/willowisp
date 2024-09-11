@@ -7,6 +7,7 @@ import gleam/io
 import gleam/json.{decode}
 import gleam/result.{replace_error}
 import gleam/uri
+import gleam/erlang/os.{get_env}
 
 pub type AuthResponse {
   AuthResponse(
@@ -35,11 +36,12 @@ pub type OAuthError {
 }
 
 pub fn auth_code_request(code: String) {
+  let assert Ok(discord_redirect_url) = get_env("DISCORD_REDIERCT_URL")
   let body = {
     let list = [
       #("code", code),
       #("grant_type", "authorization_code"),
-      #("redirect_uri", "http://localhost:8081/oauth"),
+      #("redirect_uri", discord_redirect_url),
     ]
     uri.query_to_string(list)
   }
