@@ -95,7 +95,7 @@ fn insert(
   let inputs =
     list.fold(site_ids, [], fn(values, id) {
       case id {
-        Ok(id) -> [sqlight.int(id), user_input, ..values]
+        Ok(id) -> [user_input, sqlight.int(id), ..values]
         Error(_) -> values
       }
     })

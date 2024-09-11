@@ -3,6 +3,11 @@ import gleam/io.{debug}
 import sqlight
 
 pub fn get_connection() {
+  let path = get_db_path()
+  sqlight.open(path)
+}
+
+pub fn get_db_path() {
   let db_prefix = get_env("DB_PREFIX")
   let base = "willowisp.sqlite"
   let path = case db_prefix {
@@ -10,7 +15,7 @@ pub fn get_connection() {
     _ -> "./" <> base
   }
   debug("DB PATH " <> path)
-  sqlight.open(path)
+  path
 }
 
 pub fn init_db() {

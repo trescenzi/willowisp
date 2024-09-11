@@ -1,3 +1,4 @@
+import app/discord/channel.{create_bot_dm_channel, send_bot_message_to_channel}
 import app/db.{get_connection}
 import gleam/dynamic
 import gleam/erlang/process.{type Subject}
@@ -5,6 +6,7 @@ import gleam/hackney
 import gleam/http/request
 import gleam/io
 import gleam/list.{each}
+import gleam/int
 import gleam/otp/actor
 import gleam/otp/task
 import gleam/result.{map_error, try}
@@ -34,6 +36,32 @@ fn get_sites(db db: sqlight.Connection) {
     io.debug(e)
     SqlError
   })
+}
+
+fn notify_users(url: String) {
+  // if we cannot connect this task just blows up, that's ok
+  // we'll likely notify them next time just fine
+  let assert Ok(connection) = get_connection()
+  let sql = "select dn.userid from discord_notifications dn join sites s on s.id = dn.siteid where s.url = ?"
+  use userids <- result.try(
+    sqlight.query(
+      sql,
+      on: connection,
+      with: [sqlight.text(url)],
+      expecting: dynamic.element(0, dynamic.int),
+    )
+  )
+  io.debug("notifying the below users")
+  io.debug(userids)
+
+  each(userids, fn(id) {
+    io.debug("notifying")
+    io.debug(id)
+    use channel <- result.try(create_bot_dm_channel(int.to_string(id)))
+    send_bot_message_to_channel(url <> " is down", channel:)
+  })
+
+  Ok("notified")
 }
 
 fn check_site(url: String) {
@@ -109,6 +137,15 @@ fn check_all(db: sqlight.Connection) {
   each(sites, fn(site) {
     let #(url, id) = site
     let status = check_site(url)
+    task.async(fn() { 
+      case status {
+        Ok(_) -> Ok("")
+        Error(_) -> {
+          io.debug("notifying users about" <> url)
+          notify_users(url)
+        }
+      }
+    })
     save_status(db:, id:, status:)
   })
   Ok(sites)
