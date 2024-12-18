@@ -153,7 +153,7 @@ fn check_all(db: sqlight.Connection) {
 
 fn loop(db: sqlight.Connection) {
   let _ = check_all(db)
-  process.sleep(60_000)
+  process.sleep(300_000)
   loop(db)
 }
 
