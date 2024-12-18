@@ -37,6 +37,8 @@ pub type OAuthError {
 
 pub fn auth_code_request(code: String) {
   let assert Ok(discord_redirect_url) = get_env("DISCORD_REDIERCT_URL")
+  let assert Ok(secret) = get_env("DISCORD_OAUTH_SECRET")
+  let assert Ok(app_id) = get_env("DISCORD_OAUTH_ID")
   let body = {
     let list = [
       #("code", code),
@@ -52,7 +54,7 @@ pub fn auth_code_request(code: String) {
   |> request.set_path("/api/v10/oauth2/token")
   |> request.set_header("accept", "application/json")
   |> request.set_header("content-type", "application/x-www-form-urlencoded")
-  |> basic_auth("1277745653312651317", "FwKC1QgoVmz7pXz6NTmCKoV4HQYM8n5g")
+  |> basic_auth(app_id, secret)
   |> request.set_body(body)
   |> io.debug
   |> hackney.send
@@ -60,6 +62,9 @@ pub fn auth_code_request(code: String) {
 }
 
 pub fn refresh_token(token: String) {
+  let assert Ok(secret) = get_env("DISCORD_OAUTH_SECRET")
+  let assert Ok(app_id) = get_env("DISCORD_OAUTH_ID")
+
   let body = {
     let list = [
       #("refresh_token", token),
@@ -75,7 +80,7 @@ pub fn refresh_token(token: String) {
   |> request.set_path("/api/v10/oauth2/token")
   |> request.set_header("accept", "application/json")
   |> request.set_header("content-type", "application/x-www-form-urlencoded")
-  |> basic_auth("1277745653312651317", "FwKC1QgoVmz7pXz6NTmCKoV4HQYM8n5g")
+  |> basic_auth(app_id, secret)
   |> request.set_body(body)
   |> io.debug
   |> hackney.send
